@@ -1,0 +1,14 @@
+0.06
+  - try to read /proc even on FreeBSD (use Proc::ProcessTable as last effort)
+
+0.04
+  - more accurate with regexps
+
+0.03
+  - disable_all_signals
+
+0.02
+  - preparing for pingerd
+
+0.01
+  - first release to CPAN
