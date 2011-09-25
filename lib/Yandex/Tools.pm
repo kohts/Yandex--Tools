@@ -1146,6 +1146,10 @@ sub do_log {
       return;
     }
     if (ref($Yandex::Tools::LOG)) {
+      if ($Yandex::Tools::LOG->{'turned_off'}) {
+        return;
+      }
+
       $log_filename = $Yandex::Tools::LOG->{'filename'};
       if (!$log_filename) {
         print STDERR "Yandex::Tools::LOG->{'filename'} not configured: $message_formatted\n";
