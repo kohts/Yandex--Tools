@@ -19,5 +19,5 @@ WriteMakefile(
   VERSION_FROM  => 'lib/Yandex/Tools.pm',
   ABSTRACT_FROM => 'lib/Yandex/Tools.pm',
   PREREQ_PM     => $prereqs,
-  AUTHOR        => 'Petya Kohts <kohts@yandex-team.ru>',
+  AUTHOR        => 'Petya Kohts <petya@kohts.ru>',
   );

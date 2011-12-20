@@ -7,7 +7,7 @@ use vars qw($VERSION @ISA @EXPORT @EXPORT_OK $AUTOLOAD);
 
 require Exporter;
 
-$VERSION = '0.12';
+$VERSION = '0.13';
 @ISA = qw(Exporter);
 @EXPORT_OK = qw (
   can_log
@@ -24,6 +24,7 @@ $VERSION = '0.12';
   read_file_option
   read_file_scalar
   write_file_option
+  write_file_scalar
 
   array_clear_dupes
   canonize_delimiters
@@ -132,6 +133,19 @@ sub write_file_option_safe {
 
   my $res = rename ($filename_tmp, $filename);
   return $res;
+}
+
+sub write_file_scalar {
+  my ($filename, $value, $opts) = @_;
+
+  $opts = {} unless $opts;
+  my $fh = Yandex::Tools::safe_open($filename, "overwrite", {'timeout' => $opts->{'timeout'} || 2});
+  return 0 unless $fh;
+
+  $value = "" unless defined($value);
+
+  print $fh $value;
+  Yandex::Tools::safe_close($fh);
 }
 
 sub read_file_scalar {
@@ -1892,9 +1906,16 @@ Yandex::Tools - useful functions for Yandex daemons and programs.
     print $line . "\n";
   }
 
-  # read file removing \r\n;
-  # returns undef if file doesn't exist
+  # read file removing \r\n; returns undef if file doesn't exist
   my $hostname = read_file_option('/etc/hostname');
+
+  # read file as is; returns undef if file doesn't exist
+  my $etc_passwd = read_file_scalar('/etc/passwd');
+
+  # read file as is; returns True on success, False otherwise
+  if (write_file_scalar('/etc/passwd', $etc_passwd)) {
+    print "written successfully!\n";
+  }
 
   # simply write some text to file
   # (which would be read with read_file_option)
@@ -1996,7 +2017,7 @@ Petya Kohts E<lt>petya@kohts.ruE<gt>
 
 =head1 COPYRIGHT
 
-Copyright 2007 - 2010 Petya Kohts.
+Copyright 2007 - 2011 Petya Kohts.
 
 This program is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.
