@@ -6,7 +6,6 @@ my $prereqs = {
   'Cwd'  => 0,
   'Storable'  => 0,
   'Time::HiRes'  => 0,
-  'Schedule::Cron'  => 0,
   'Time::Local'  => 0,
   };
 

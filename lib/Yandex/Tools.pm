@@ -7,7 +7,7 @@ use vars qw($VERSION @ISA @EXPORT @EXPORT_OK $AUTOLOAD);
 
 require Exporter;
 
-$VERSION = '0.13';
+$VERSION = '0.14';
 @ISA = qw(Exporter);
 @EXPORT_OK = qw (
   can_log
