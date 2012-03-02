@@ -15,6 +15,7 @@ sub ppid { my ($self) = @_; return $self->{'ppid'}; }
 sub pgrp { my ($self) = @_; return $self->{'pgid'}; }
 sub pgid { my ($self) = @_; return $self->{'pgid'}; }
 sub cmndline { my ($self) = @_; return $self->{'cmd'}; }
+sub cmd { my ($self) = @_; return $self->{'cmd'}; }
 
 package Yandex::Tools::ProcessList;
 
@@ -67,6 +68,88 @@ sub code_may_fail {
     };
 }
 
+# returns
+#   * 0 if process does not exist at all (no /proc/PID directory),
+#   * undef if its /proc/PID entry is in some inconsistent state
+#   * psProcess object if pid was found and successfully read with (pid, ppid, pgid, cmd) methods
+#
+sub get_process_by_pid {
+  my ($pid) = @_;
+
+  my $read_may_fail = sub {
+    my ($filename) = @_;
+    my $filecontent;
+    if (open F, $filename) {
+      { local $/ = undef; $filecontent = <F>; }
+      close F;
+    }
+    return $filecontent;
+  };
+
+  my $pid_dir = "/proc/$pid";
+
+  return 0 if ! -d $pid_dir;
+
+  my $cmd = $read_may_fail->("$pid_dir/cmdline");
+  $cmd =~ s/\0/ /goi if $cmd;
+
+  my $ppid;
+  my $pgid;
+
+  if (-e "$pid_dir/stat") { # linux path
+    my $stat = $read_may_fail->("$pid_dir/stat");
+    return undef unless $stat;
+
+    my @stat_arr = split(" ", $stat);
+    return undef if ! scalar(@stat_arr) > 5;
+
+    if (!$cmd) {
+      $cmd = $stat_arr[1];
+    
+      if ($cmd) {
+        $cmd =~ s/[\(\)]//goi;
+        $cmd = "[" . $cmd . "]";
+      }
+    }
+
+    $ppid = $stat_arr[3];
+    $pgid = $stat_arr[4];
+  }
+  elsif (-e "$pid_dir/status") { # bsd path
+    my $stat = $read_may_fail->("$pid_dir/status");
+    return undef unless $stat;
+
+    my @stat_arr = split(" ", $stat);
+    return undef if ! scalar(@stat_arr) > 5;
+
+    if (!$cmd) {
+      $cmd = $stat_arr[0];
+    
+      if ($cmd) {
+        $cmd =~ s/[\(\)]//goi;
+        $cmd = "[" . $cmd . "]";
+      }
+    }
+
+    $ppid = $stat_arr[2];
+    $pgid = $stat_arr[3];
+  }
+
+  return undef if ! $cmd;
+  return undef if $ppid !~ /^[0-9]+$/o;
+  return undef if $pgid !~ /^[0-9]+$/o;
+
+  my $p = {
+    'pid' => $pid,
+    'ppid' => $ppid,
+    'pgid' => $pgid,
+    'cmd' => $cmd,
+    };
+
+  bless ($p, 'psProcess');
+  return $p;
+}
+
 sub get_process_table {
   my $ptable;
 
@@ -112,81 +195,15 @@ sub get_process_table {
       Yandex::Tools::die("/proc is not mounted");
     }
 
-    my $read_may_fail = sub {
-      my ($filename) = @_;
-      my $filecontent;
-      if (open F, $filename) {
-        { local $/ = undef; $filecontent = <F>; }
-        close F;
-      }
-      return $filecontent;
-    };
-
     foreach my $e (sort @all_entries) {
-      my $pid_dir = "/proc/$e";
-
       next if $e eq '.' || $e eq '..';
       next if $e !~ /^\d+$/o;
-      next if ! -d $pid_dir;
+
+      my $p = get_process_by_pid($e);
       
-      my $cmd = $read_may_fail->("$pid_dir/cmdline");
-      $cmd =~ s/\0/ /goi if $cmd;
-
-      my $ppid;
-      my $pgid;
-
-      if (-e "$pid_dir/stat") { # linux path
-        my $stat = $read_may_fail->("$pid_dir/stat");
-        next unless $stat;
-
-        my @stat_arr = split(" ", $stat);
-        next if ! scalar(@stat_arr) > 5;
-
-        if (!$cmd) {
-          $cmd = $stat_arr[1];
-        
-          if ($cmd) {
-            $cmd =~ s/[\(\)]//goi;
-            $cmd = "[" . $cmd . "]";
-          }
-        }
-
-        $ppid = $stat_arr[3];
-        $pgid = $stat_arr[4];
+      if ($p) {
+        push (@{$ptable}, $p);
       }
-      elsif (-e "$pid_dir/status") { # bsd path
-        my $stat = $read_may_fail->("$pid_dir/status");
-        next unless $stat;
-
-        my @stat_arr = split(" ", $stat);
-        next if ! scalar(@stat_arr) > 5;
-
-        if (!$cmd) {
-          $cmd = $stat_arr[0];
-        
-          if ($cmd) {
-            $cmd =~ s/[\(\)]//goi;
-            $cmd = "[" . $cmd . "]";
-          }
-        }
-
-        $ppid = $stat_arr[2];
-        $pgid = $stat_arr[3];
-      }
-
-      next if ! $cmd;
-      next if $ppid !~ /^[0-9]+$/o;
-      next if $pgid !~ /^[0-9]+$/o;
-
-      my $p = {
-        'pid' => $e,
-        'ppid' => $ppid,
-        'pgid' => $pgid,
-        'cmd' => $cmd,
-        };
-
-      bless ($p, 'psProcess');
-      push (@{$ptable}, $p);
     }
 
     return $ptable;
