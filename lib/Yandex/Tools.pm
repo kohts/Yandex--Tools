@@ -982,6 +982,11 @@ sub run_forked {
         });
     }
     elsif (ref($cmd) eq 'CODE') {
+      # reopen STDOUT and STDERR for child code:
+      # https://rt.cpan.org/Ticket/Display.html?id=85912
+      open STDOUT, '>&', $parent_stdout_socket || Yandex::Tools::die("Unable to reopen STDOUT: $!\n");
+      open STDERR, '>&', $parent_stderr_socket || Yandex::Tools::die("Unable to reopen STDERR: $!\n");
+
       $child_exit_code = $cmd->({
         'opts' => $opts,
         'parent_info' => $parent_info_socket,
