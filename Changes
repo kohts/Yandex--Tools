@@ -1,3 +1,15 @@
+0.16
+  - run_forked: use select instead of continous read and sleep,
+    for Andrey Grunau (Yandex)
+
+  - run_forked: https://rt.cpan.org/Ticket/Display.html?id=85912
+  
+  - t/01-compile.t: by Alexandr Ciornii
+    from https://github.com/kohts/Yandex--Tools/pull/1
+
+  - t/02-run-forked-perl-code.t: by John Devitofranceschi
+    from https://rt.cpan.org/Ticket/Display.html?id=85912
+
 0.06
   - try to read /proc even on FreeBSD (use Proc::ProcessTable as last effort)
 
