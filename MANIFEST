@@ -6,3 +6,4 @@ lib/Yandex/Tools.pm
 lib/Yandex/Tools/ProcessList.pm
 HACKING
 META.yml                                 Module meta-data (added by MakeMaker)
+t/01-compile.t
