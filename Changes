@@ -1,14 +1,13 @@
 0.16
-  - run_forked: use select instead of continous read and sleep,
-    for Andrey Grunau (Yandex)
 
-  - run_forked: https://rt.cpan.org/Ticket/Display.html?id=85912
+  - using IPC::Cmd run_forked and helper functions
+    (install_layered_signal, kill_gently, open3_run)
   
   - t/01-compile.t: by Alexandr Ciornii
     from https://github.com/kohts/Yandex--Tools/pull/1
 
-  - t/02-run-forked-perl-code.t: by John Devitofranceschi
-    from https://rt.cpan.org/Ticket/Display.html?id=85912
+  - get_process_by_pid: populate start_time (seconds since epoch)
+    on Linux, by Nikita Makeev (Iponweb)
 
 0.06
   - try to read /proc even on FreeBSD (use Proc::ProcessTable as last effort)

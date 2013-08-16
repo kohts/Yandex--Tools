@@ -16,6 +16,7 @@ sub pgrp { my ($self) = @_; return $self->{'pgid'}; }
 sub pgid { my ($self) = @_; return $self->{'pgid'}; }
 sub cmndline { my ($self) = @_; return $self->{'cmd'}; }
 sub cmd { my ($self) = @_; return $self->{'cmd'}; }
+sub start_time { my ($self) = @_; return $self->{'start_time'}; }
 
 package Yandex::Tools::ProcessList;
 
@@ -95,6 +96,7 @@ sub get_process_by_pid {
 
   my $ppid;
   my $pgid;
+  my $seconds_since_boot = 0;
 
   if (-e "$pid_dir/stat") { # linux path
     my $stat = $read_may_fail->("$pid_dir/stat");
@@ -114,6 +116,7 @@ sub get_process_by_pid {
 
     $ppid = $stat_arr[3];
     $pgid = $stat_arr[4];
+    $seconds_since_boot = int($stat_arr[21] / 100);
   }
   elsif (-e "$pid_dir/status") { # bsd path
     my $stat = $read_may_fail->("$pid_dir/status");
@@ -135,6 +138,18 @@ sub get_process_by_pid {
     $pgid = $stat_arr[3];
   }
 
+  # Get btime
+  my $start_time;
+  my $stat = $read_may_fail->("/proc/stat");
+  $start_time = undef;
+  my @stat = split("\n",$stat);
+  for (@stat) {
+    if (/^btime (\d+)/) {
+      $start_time = $seconds_since_boot + $1;
+      last;
+    }
+  }
+
   return undef if ! $cmd;
   return undef if $ppid !~ /^[0-9]+$/o;
   return undef if $pgid !~ /^[0-9]+$/o;
@@ -144,6 +159,7 @@ sub get_process_by_pid {
     'ppid' => $ppid,
     'pgid' => $pgid,
     'cmd' => $cmd,
+    'start_time' => $start_time,
     };
 
   bless ($p, 'psProcess');

@@ -1,5 +1,7 @@
 #!/usr/bin/perl
+
 use strict;
+use warnings;
 use ExtUtils::MakeMaker;
 
 my $prereqs = {
@@ -7,6 +9,7 @@ my $prereqs = {
   'Storable'  => 0,
   'Time::HiRes'  => 0,
   'Time::Local'  => 0,
+  'IPC::Cmd' => 0.84,
   };
 
 if ($^O ne 'linux') {
@@ -18,5 +21,5 @@ WriteMakefile(
   VERSION_FROM  => 'lib/Yandex/Tools.pm',
   ABSTRACT_FROM => 'lib/Yandex/Tools.pm',
   PREREQ_PM     => $prereqs,
-  AUTHOR        => 'Petya Kohts <petya@kohts.ru>',
+  AUTHOR        => 'Petya Kohts <petya@kohts.com>',
   );
