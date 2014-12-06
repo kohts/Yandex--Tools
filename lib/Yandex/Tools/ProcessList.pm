@@ -91,6 +91,17 @@ sub get_process_by_pid {
 
   return 0 if ! -d $pid_dir;
 
+  # http://unix.stackexchange.com/questions/72693/a-hidden-process-what-it-is
+  my $proc;
+  if (!opendir($proc, "/proc")) {
+    Yandex:Tools::die("unable to read /proc");
+  }
+  my $proc_entries = [readdir($proc)];
+  close($proc);
+  if (! grep {$_ eq $pid} @{$proc_entries}) {
+    return 0;
+  }
+
   my $cmd = $read_may_fail->("$pid_dir/cmdline");
   $cmd =~ s/\0/ /goi if $cmd;
 
